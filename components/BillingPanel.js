@@ -52,14 +52,24 @@ export default function BillingPanel({ apiKey, currentBalance, onBalanceUpdate }
     try {
       const res = await fetch(`${BACKEND_URL}/billing/topup?amount_usd=${topupAmount}`, {
         method: 'POST',
-        headers: { 'x-api-key': apiKey },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey 
+        },
       });
+      if (!res.ok) {
+        const text = await res.text();
+        console.error("Billing error:", text);
+        throw new Error('Failed to create checkout session');
+      }
       const data = await res.json();
       if (data.checkout_url) {
         window.location.href = data.checkout_url;
+      } else {
+        throw new Error('No checkout URL returned');
       }
     } catch (err) {
-      alert('Failed to create checkout session');
+      alert(err.message);
     } finally {
       setLoading(false);
     }
@@ -70,14 +80,24 @@ export default function BillingPanel({ apiKey, currentBalance, onBalanceUpdate }
     try {
       const res = await fetch(`${BACKEND_URL}/billing/setup-card`, {
         method: 'POST',
-        headers: { 'x-api-key': apiKey },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey 
+        },
       });
+      if (!res.ok) {
+        const text = await res.text();
+        console.error("Billing error:", text);
+        throw new Error('Failed to setup card');
+      }
       const data = await res.json();
       if (data.setup_url) {
         window.location.href = data.setup_url;
+      } else {
+        throw new Error('No setup URL returned');
       }
     } catch (err) {
-      alert('Failed to setup card');
+      alert(err.message);
     } finally {
       setLoading(false);
     }

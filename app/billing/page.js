@@ -62,12 +62,22 @@ export default function BillingPage() {
       const storedKey = localStorage.getItem('omni_api_key');
       const res = await fetch(`${BACKEND_URL}/billing/topup?amount_usd=${amount}`, {
         method: 'POST',
-        headers: { 'x-api-key': storedKey || apiKey },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-api-key': storedKey || apiKey 
+        },
       });
-      if (!res.ok) throw new Error('Failed to create checkout session');
+      if (!res.ok) {
+        const text = await res.text();
+        console.error("Billing error:", text);
+        throw new Error('Failed to create checkout session');
+      }
       const data = await res.json();
-      // Redirect to Stripe Checkout
-      window.location.href = data.checkout_url;
+      if (data.checkout_url) {
+        window.location.href = data.checkout_url;
+      } else {
+        throw new Error('No checkout URL returned');
+      }
     } catch (err) {
       setError(err.message);
     } finally {
@@ -79,11 +89,22 @@ export default function BillingPage() {
     try {
       const res = await fetch(`${BACKEND_URL}/billing/setup-card`, {
         method: 'POST',
-        headers: { 'x-api-key': apiKey },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey 
+        },
       });
-      if (!res.ok) throw new Error('Failed to setup card');
+      if (!res.ok) {
+        const text = await res.text();
+        console.error("Billing error:", text);
+        throw new Error('Failed to setup card');
+      }
       const data = await res.json();
-      window.location.href = data.setup_url;
+      if (data.setup_url) {
+        window.location.href = data.setup_url;
+      } else {
+        throw new Error('No setup URL returned');
+      }
     } catch (err) {
       setError(err.message);
     }
