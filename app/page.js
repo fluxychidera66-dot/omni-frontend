@@ -50,7 +50,7 @@ export default function Dashboard() {
     setLoading(true);
     setError('');
     try {
-      const res = await fetch(\`${BACKEND_URL}/auth/login-or-register\`, {
+      const res = await fetch(`${BACKEND_URL}/auth/login-or-register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -74,10 +74,10 @@ export default function Dashboard() {
     setLoading(true);
     setError('');
     try {
-      const res = await fetch(\`${BACKEND_URL}/dashboard/usage\`, {
+      const res = await fetch(`${BACKEND_URL}/dashboard/usage`, {
         headers: { 'x-api-key': key },
       });
-      if (!res.ok) throw new Error(\`Server responded \${res.status}\`);
+      if (!res.ok) throw new Error(`Server responded ${res.status}`);
       const data = await res.json();
       setUsageData(data);
     } catch (err) {
@@ -127,7 +127,7 @@ export default function Dashboard() {
 
   const handleRegenerate = async () => {
     try {
-      const res = await fetch(\`${BACKEND_URL}/auth/regenerate-key\`, {
+      const res = await fetch(`${BACKEND_URL}/auth/regenerate-key`, {
         method: 'POST',
         headers: { 'x-api-key': apiKey },
       });
@@ -135,9 +135,9 @@ export default function Dashboard() {
       const data = await res.json();
       localStorage.setItem('omni_api_key', data.apiKey);
       setApiKey(data.apiKey);
-      alert(\`New API key: \${data.apiKey}\`);
+      alert(`New API key: ${data.apiKey}`);
     } catch (err) {
-      alert(\`Error: \${err.message}\`);
+      alert(`Error: ${err.message}`);
     }
   };
 
