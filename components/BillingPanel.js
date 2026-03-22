@@ -50,17 +50,18 @@ export default function BillingPanel({ apiKey, currentBalance, onBalanceUpdate }
   const handleTopup = async () => {
     setLoading(true);
     try {
+      const userApiKey = apiKey || localStorage.getItem('omni_api_key');
       const res = await fetch(`${BACKEND_URL}/billing/topup?amount_usd=${topupAmount}`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
-          'x-api-key': apiKey 
+          'x-api-key': userApiKey 
         },
       });
       if (!res.ok) {
         const text = await res.text();
         console.error("Billing error:", text);
-        throw new Error('Failed to create checkout session');
+        throw new Error(`Request failed: ${text}`);
       }
       const data = await res.json();
       if (data.checkout_url) {
@@ -78,23 +79,26 @@ export default function BillingPanel({ apiKey, currentBalance, onBalanceUpdate }
   const handleSetupCard = async () => {
     setLoading(true);
     try {
+      const userApiKey = apiKey || localStorage.getItem('omni_api_key');
       const res = await fetch(`${BACKEND_URL}/billing/setup-card`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
-          'x-api-key': apiKey 
+          'x-api-key': userApiKey 
         },
       });
       if (!res.ok) {
         const text = await res.text();
         console.error("Billing error:", text);
-        throw new Error('Failed to setup card');
+        throw new Error(`Request failed: ${text}`);
       }
       const data = await res.json();
-      if (data.setup_url) {
-        window.location.href = data.setup_url;
+      // The backend returns setup_url, but the task says to use checkout_url
+      const redirectUrl = data.checkout_url || data.setup_url;
+      if (redirectUrl) {
+        window.location.href = redirectUrl;
       } else {
-        throw new Error('No setup URL returned');
+        throw new Error('No redirect URL returned');
       }
     } catch (err) {
       alert(err.message);
