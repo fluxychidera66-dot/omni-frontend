@@ -59,9 +59,10 @@ export default function BillingPage() {
     setTopping(true);
     setError('');
     try {
+      const storedKey = localStorage.getItem('omni_api_key');
       const res = await fetch(`${BACKEND_URL}/billing/topup?amount_usd=${amount}`, {
         method: 'POST',
-        headers: { 'x-api-key': apiKey },
+        headers: { 'x-api-key': storedKey || apiKey },
       });
       if (!res.ok) throw new Error('Failed to create checkout session');
       const data = await res.json();
