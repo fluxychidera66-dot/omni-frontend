@@ -45,7 +45,7 @@ export default function ApiKeyManager({ apiKey, onRegenerate }) {
       </div>
       {copySuccess && <p className="text-green-500 text-sm mt-1">{copySuccess}</p>}
       <p className="text-gray-500 text-xs mt-2">
-        Include this key as the <code className="text-gray-300">x-api-key</code> header in every request.
+        Include this key as the <code className="text-gray-300">Authorization: Bearer [YOUR_KEY]</code> header in every request.
       </p>
     </div>
   );

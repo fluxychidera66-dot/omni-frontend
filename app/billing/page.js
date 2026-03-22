@@ -8,7 +8,6 @@ const BACKEND_URL = 'https://omni-backend10.vercel.app';
 const TOPUP_AMOUNTS = [10, 25, 50, 100, 250];
 
 export default function BillingPage() {
-  const [apiKey, setApiKey]             = useState('');
   const [balance, setBalance]           = useState(null);
   const [history, setHistory]           = useState([]);
   const [paymentMethods, setPaymentMethods] = useState([]);
@@ -18,24 +17,29 @@ export default function BillingPage() {
   const [loading, setLoading]           = useState(true);
   const [topping, setTopping]           = useState(false);
   const [error, setError]               = useState('');
+  const [isLoggedIn, setIsLoggedIn]     = useState(false);
 
   useEffect(() => {
-    const key = localStorage.getItem('omni_api_key');
-    if (key) {
-      setApiKey(key);
-      loadBillingData(key);
-    } else {
-      setLoading(false);
-    }
+    const init = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        setIsLoggedIn(true);
+        loadBillingData(session.access_token);
+      } else {
+        setIsLoggedIn(false);
+        setLoading(false);
+      }
+    };
+    init();
   }, []);
 
-  const loadBillingData = async (key) => {
+  const loadBillingData = async (accessToken) => {
     setLoading(true);
     try {
       const [balRes, histRes, pmRes, priceRes] = await Promise.all([
-        fetch(`${BACKEND_URL}/billing/balance`, { headers: { 'x-api-key': key } }),
-        fetch(`${BACKEND_URL}/billing/history`, { headers: { 'x-api-key': key } }),
-        fetch(`${BACKEND_URL}/billing/payment-methods`, { headers: { 'x-api-key': key } }),
+        fetch(`${BACKEND_URL}/billing/balance`, { headers: { 'Authorization': `Bearer ${accessToken}` } }),
+        fetch(`${BACKEND_URL}/billing/history`, { headers: { 'Authorization': `Bearer ${accessToken}` } }),
+        fetch(`${BACKEND_URL}/billing/payment-methods`, { headers: { 'Authorization': `Bearer ${accessToken}` } }),
         fetch(`${BACKEND_URL}/billing/pricing`),
       ]);
 
@@ -51,6 +55,14 @@ export default function BillingPage() {
   };
 
   const handleTopup = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    const accessToken = session?.access_token;
+
+    if (!accessToken) {
+      alert("You must be logged in");
+      return;
+    }
+
     const amount = customAmount ? parseFloat(customAmount) : selectedAmount;
     if (!amount || amount < 10) {
       setError('Minimum top-up is $10');
@@ -59,12 +71,11 @@ export default function BillingPage() {
     setTopping(true);
     setError('');
     try {
-      const userApiKey = "PASTE_MY_REAL_API_KEY_HERE";
       const res = await fetch(`${BACKEND_URL}/billing/topup?amount_usd=${amount}`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
-          'x-api-key': userApiKey 
+          'Authorization': `Bearer ${accessToken}`
         },
       });
       if (!res.ok) {
@@ -86,13 +97,20 @@ export default function BillingPage() {
   };
 
   const handleSetupCard = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    const accessToken = session?.access_token;
+
+    if (!accessToken) {
+      alert("You must be logged in");
+      return;
+    }
+
     try {
-      const userApiKey = "PASTE_MY_REAL_API_KEY_HERE";
       const res = await fetch(`${BACKEND_URL}/billing/setup-card`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
-          'x-api-key': userApiKey 
+          'Authorization': `Bearer ${accessToken}`
         },
       });
       if (!res.ok) {
@@ -112,7 +130,7 @@ export default function BillingPage() {
     }
   };
 
-  if (!apiKey) {
+  if (!isLoggedIn && !loading) {
     return (
       <div className="min-h-screen flex items-center justify-center p-6">
         <div className="bg-card p-8 rounded-lg">

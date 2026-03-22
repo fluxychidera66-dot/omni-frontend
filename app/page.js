@@ -7,7 +7,7 @@ import ProviderStats from '../components/ProviderStats';
 import ApiKeyManager from '../components/ApiKeyManager';
 import TaskBreakdown from '../components/TaskBreakdown';
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://your-backend.vercel.app';
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://omni-backend10.vercel.app';
 
 export default function Dashboard() {
   const [session, setSession]         = useState(null);
@@ -52,7 +52,10 @@ export default function Dashboard() {
     try {
       const res = await fetch(`${BACKEND_URL}/auth/login-or-register`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
         body: JSON.stringify({
           email: session.user.email,
           auth_user_id: session.user.id,
@@ -61,21 +64,20 @@ export default function Dashboard() {
       if (!res.ok) throw new Error('Failed to set up your account');
       const data = await res.json();
       setApiKey(data.apiKey);
-      localStorage.setItem('omni_api_key', data.apiKey);
       setView('dashboard');
-      await fetchUsage(data.apiKey);
+      await fetchUsage(session.access_token);
     } catch (err) {
       setError(err.message);
       setLoading(false);
     }
   };
 
-  const fetchUsage = async (key) => {
+  const fetchUsage = async (accessToken) => {
     setLoading(true);
     setError('');
     try {
       const res = await fetch(`${BACKEND_URL}/dashboard/usage`, {
-        headers: { 'x-api-key': key },
+        headers: { 'Authorization': `Bearer ${accessToken}` },
       });
       if (!res.ok) throw new Error(`Server responded ${res.status}`);
       const data = await res.json();
@@ -118,7 +120,6 @@ export default function Dashboard() {
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
-    localStorage.removeItem('omni_api_key');
     setApiKey('');
     setUsageData(null);
     setSession(null);
@@ -127,13 +128,15 @@ export default function Dashboard() {
 
   const handleRegenerate = async () => {
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Not logged in');
+
       const res = await fetch(`${BACKEND_URL}/auth/regenerate-key`, {
         method: 'POST',
-        headers: { 'x-api-key': apiKey },
+        headers: { 'Authorization': `Bearer ${session.access_token}` },
       });
       if (!res.ok) throw new Error('Failed to regenerate');
       const data = await res.json();
-      localStorage.setItem('omni_api_key', data.apiKey);
       setApiKey(data.apiKey);
       alert(`New API key: ${data.apiKey}`);
     } catch (err) {
@@ -232,7 +235,7 @@ export default function Dashboard() {
           <h1 className="text-3xl font-bold">Omni Dashboard</h1>
           <div className="flex items-center gap-4">
             <span className="text-gray-500 text-sm hidden md:block">{session?.user?.email}</span>
-            <button onClick={() => fetchUsage(apiKey)} className="text-gray-400 hover:text-white text-sm">Refresh</button>
+            <button onClick={() => fetchUsage(session.access_token)} className="text-gray-400 hover:text-white text-sm">Refresh</button>
             <button onClick={handleSignOut} className="text-gray-400 hover:text-white text-sm">Sign out</button>
           </div>
         </div>

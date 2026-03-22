@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
 
 const BACKEND_URL = 'https://omni-backend10.vercel.app';
 
-export default function BillingPanel({ apiKey, currentBalance, onBalanceUpdate }) {
+export default function BillingPanel({ currentBalance, onBalanceUpdate }) {
   const [topupAmount, setTopupAmount]   = useState(10);
   const [loading, setLoading]           = useState(false);
   const [history, setHistory]           = useState([]);
@@ -12,27 +13,31 @@ export default function BillingPanel({ apiKey, currentBalance, onBalanceUpdate }
   const [pricing, setPricing]           = useState(null);
 
   useEffect(() => {
-    if (apiKey) {
-      fetchHistory();
-      fetchPaymentMethods();
-      fetchPricing();
-    }
-  }, [apiKey]);
+    const init = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        fetchHistory(session.access_token);
+        fetchPaymentMethods(session.access_token);
+        fetchPricing();
+      }
+    };
+    init();
+  }, []);
 
-  const fetchHistory = async () => {
+  const fetchHistory = async (accessToken) => {
     try {
       const res = await fetch(`${BACKEND_URL}/billing/history`, {
-        headers: { 'x-api-key': apiKey },
+        headers: { 'Authorization': `Bearer ${accessToken}` },
       });
       const data = await res.json();
       setHistory(data.transactions || []);
     } catch {}
   };
 
-  const fetchPaymentMethods = async () => {
+  const fetchPaymentMethods = async (accessToken) => {
     try {
       const res = await fetch(`${BACKEND_URL}/billing/payment-methods`, {
-        headers: { 'x-api-key': apiKey },
+        headers: { 'Authorization': `Bearer ${accessToken}` },
       });
       const data = await res.json();
       setPaymentMethods(data.payment_methods || []);
@@ -50,12 +55,19 @@ export default function BillingPanel({ apiKey, currentBalance, onBalanceUpdate }
   const handleTopup = async () => {
     setLoading(true);
     try {
-      const userApiKey = "PASTE_MY_REAL_API_KEY_HERE";
+      const { data: { session } } = await supabase.auth.getSession();
+      const accessToken = session?.access_token;
+
+      if (!accessToken) {
+        alert("You must be logged in");
+        return;
+      }
+
       const res = await fetch(`${BACKEND_URL}/billing/topup?amount_usd=${topupAmount}`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
-          'x-api-key': userApiKey 
+          'Authorization': `Bearer ${accessToken}`
         },
       });
       if (!res.ok) {
@@ -79,12 +91,19 @@ export default function BillingPanel({ apiKey, currentBalance, onBalanceUpdate }
   const handleSetupCard = async () => {
     setLoading(true);
     try {
-      const userApiKey = "PASTE_MY_REAL_API_KEY_HERE";
+      const { data: { session } } = await supabase.auth.getSession();
+      const accessToken = session?.access_token;
+
+      if (!accessToken) {
+        alert("You must be logged in");
+        return;
+      }
+
       const res = await fetch(`${BACKEND_URL}/billing/setup-card`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
-          'x-api-key': userApiKey 
+          'Authorization': `Bearer ${accessToken}`
         },
       });
       if (!res.ok) {
@@ -93,7 +112,6 @@ export default function BillingPanel({ apiKey, currentBalance, onBalanceUpdate }
         throw new Error(`Request failed: ${text}`);
       }
       const data = await res.json();
-      // The backend returns setup_url, but the task says to use checkout_url
       const redirectUrl = data.checkout_url || data.setup_url;
       if (redirectUrl) {
         window.location.href = redirectUrl;
