@@ -154,7 +154,7 @@ export default function Dashboard() {
       <div className="min-h-screen flex items-center justify-center p-6">
         <div className="bg-card p-8 rounded-lg w-full max-w-md">
           <h1 className="text-2xl font-bold mb-2">Omni Dashboard</h1>
-          <p className="text-gray-400 mb-6 text-sm">Sign in to manage your API and view usage.</p>
+          <p className="text-gray-400 mb-6 text-sm">Sign in to manage your API and view usage. (Verified)</p>
 
           <button
             onClick={handleGoogleLogin}
