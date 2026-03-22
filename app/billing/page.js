@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://your-backend.vercel.app';
+const BACKEND_URL = 'https://omni-backend10.vercel.app';
 
 const TOPUP_AMOUNTS = [10, 25, 50, 100, 250];
 
@@ -59,7 +59,7 @@ export default function BillingPage() {
     setTopping(true);
     setError('');
     try {
-      const userApiKey = apiKey || localStorage.getItem('omni_api_key');
+      const userApiKey = "PASTE_MY_REAL_API_KEY_HERE";
       const res = await fetch(`${BACKEND_URL}/billing/topup?amount_usd=${amount}`, {
         method: 'POST',
         headers: { 
@@ -87,7 +87,7 @@ export default function BillingPage() {
 
   const handleSetupCard = async () => {
     try {
-      const userApiKey = apiKey || localStorage.getItem('omni_api_key');
+      const userApiKey = "PASTE_MY_REAL_API_KEY_HERE";
       const res = await fetch(`${BACKEND_URL}/billing/setup-card`, {
         method: 'POST',
         headers: { 

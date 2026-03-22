@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://your-backend.vercel.app';
+const BACKEND_URL = 'https://omni-backend10.vercel.app';
 
 export default function BillingPanel({ apiKey, currentBalance, onBalanceUpdate }) {
   const [topupAmount, setTopupAmount]   = useState(10);
@@ -50,7 +50,7 @@ export default function BillingPanel({ apiKey, currentBalance, onBalanceUpdate }
   const handleTopup = async () => {
     setLoading(true);
     try {
-      const userApiKey = apiKey || localStorage.getItem('omni_api_key');
+      const userApiKey = "PASTE_MY_REAL_API_KEY_HERE";
       const res = await fetch(`${BACKEND_URL}/billing/topup?amount_usd=${topupAmount}`, {
         method: 'POST',
         headers: { 
@@ -79,7 +79,7 @@ export default function BillingPanel({ apiKey, currentBalance, onBalanceUpdate }
   const handleSetupCard = async () => {
     setLoading(true);
     try {
-      const userApiKey = apiKey || localStorage.getItem('omni_api_key');
+      const userApiKey = "PASTE_MY_REAL_API_KEY_HERE";
       const res = await fetch(`${BACKEND_URL}/billing/setup-card`, {
         method: 'POST',
         headers: { 
